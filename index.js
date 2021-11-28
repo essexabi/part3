@@ -19,7 +19,7 @@ const app = express();
 const cors = require("cors");
 app.use(cors());
 
-const Note = require('./models/Note.')
+const Note = require('./models/Note')
 
 app.use(express.json());
 
