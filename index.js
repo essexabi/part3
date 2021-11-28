@@ -22,9 +22,7 @@ const Note = require('./models/Note')
 app.use(cors());
 app.use(express.json());
 
-let notes = [
-   
-];
+
 
 /*const app = http.createServer((request, response) => {
     response.writeHead(200, {'Content-Type':'application/json'});
@@ -36,7 +34,7 @@ app.get("/", (request, response) => {
 });
 
 app.get("/api/notes", (request, response) => {
-    notes.find({}).then( notes => {
+    Note.find({}).then( notes => {
         response.json(notes);
     })
 });
