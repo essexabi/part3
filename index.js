@@ -17,9 +17,10 @@ const app = express();
 });
  */
 const cors = require("cors");
-const Note = require('./models/Note')
-
 app.use(cors());
+
+const Note = require('./models/Note.')
+
 app.use(express.json());
 
 
