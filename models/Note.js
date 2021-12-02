@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const {model, Schema} = mongoose;
+const { Schema, model, deleteModel } = require("mongoose");
+
 
 
 
@@ -9,6 +9,14 @@ const noteSchema = new Schema({
     important: Boolean,
     date: Date
 })
+
+noteSchema.set('toJSON', {
+    transform: (document, returnedObject) => {
+        returnedObject.id =returnedObject._id;
+        delete returnedObject.__v
+        delete returnedObject._id;
+    }
+}) 
 
 const Note = model('Note', noteSchema)
 

@@ -1,7 +1,9 @@
-require('./mongo');
+require('dotenv').config();
+require("./mongo");
 
 const express = require("express");
 const app = express();
+
 
 /* app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -19,11 +21,10 @@ const app = express();
 const cors = require("cors");
 app.use(cors());
 
-const Note = require('./models/Note')
+const Note = require("./models/Note");
+const { exists } = require("./models/Note");
 
 app.use(express.json());
-
-
 
 /*const app = http.createServer((request, response) => {
     response.writeHead(200, {'Content-Type':'application/json'});
@@ -35,53 +36,61 @@ app.get("/", (request, response) => {
 });
 
 app.get("/api/notes", (request, response) => {
-    Note.find({}).then( notes => {
-        response.json(notes);
-    })
+    Note.find({}).then((notes) => {
+        response.json(notes.map( note => {
+            const { _id, __v, ...restOfNote} = note.toObject();
+            return {
+                id: _id,
+                ...restOfNote      
+            }
+        }));
+    });
 });
 
 app.get("/api/notes/:id", (request, response) => {
-    const id = Number(request.params.id);
-    const note = notes.find((note) => note.id === id);
-
-    if (note) {
-        response.json(note);
-    } else {
-        response.status(404).end();
-    }
+    const id = request.params.id;
+    Note.findById(id).then((note) => {
+        if (note) {
+            response.json(note);
+        } else {
+            response.status(404).end();
+        }
+    });
 });
 
 app.delete("/api/notes/:id", (request, response) => {
-    const id = Number(request.params.id);
-    notes = notes.filter((note) => note.id !== id);
-    response.status(204).end();
+    const id = request.params.id;
+    Note.findByIdAndDelete(id).then(() => {
+       console.log("La nota ha sido borrada");
+       response.status(301);
+    }).catch(err => {
+        console.log(err)
+    })
 });
 
 app.post("/api/notes", (request, response) => {
     const note = request.body;
 
-
-    if(!note || !note.body) {
-
+    if (!note || !note.body) {
         return response.status(400).json({
             note: note.body,
-            error:"Content is missing or does not exist."
-        })
+            error: "Content is missing or does not exist.",
+        });
     }
-    const ids = notes.map((note) => note.id);
-    const maxId = Math.max(...ids);
-    const newNote = {
-        userId: 1,
-        id: maxId + 1,
+
+    const newNote = new Note({
         title: note.title,
         body: note.body,
         important: typeof note.important !== undefined ? note.important : false,
-        date: new Date().toISOString()
-    };
-    notes=[...notes, newNote]
+        date: new Date().toISOString(),
+    });
+
+    newNote.save().then((savedNote) => {
+        response.json(savedNote);
+    });
 
     response.status(201).json(newNote);
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server is running on port: ${PORT}`));
