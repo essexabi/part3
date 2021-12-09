@@ -10,6 +10,24 @@ const Tracing = require("@sentry/tracing");
 
 const app = express();
 
+//////////////////////CORS IMPORT//////////////////////////
+/* app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
+    if ('OPTIONS' === req.method) {
+        res.status(200).send(); // For OPTIONS requests, a 200 response is sent immediately
+    } else {
+        next(); // Continues normal workflow
+    }
+
+});
+ */
+const cors = require("cors");
+app.use(cors());
+
+
 /////////////////////SENTRY INIT//////////////////////////
 Sentry.init({
     dsn: "https://ff36b7c6dc5f4d7bbb7cb9a91dd7df0f@o1083032.ingest.sentry.io/6092209",
@@ -33,22 +51,6 @@ app.use(Sentry.Handlers.tracingHandler());
 const notFound = require("./middleware/notFound");
 const handleError = require("./middleware/handleError");
 
-//////////////////////CORS IMPORT//////////////////////////
-/* app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
-    if ('OPTIONS' === req.method) {
-        res.status(200).send(); // For OPTIONS requests, a 200 response is sent immediately
-    } else {
-        next(); // Continues normal workflow
-    }
-
-});
- */
-const cors = require("cors");
-app.use(cors());
 
 const Note = require("./models/Note");
 const { exists } = require("./models/Note");
