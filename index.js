@@ -1,17 +1,39 @@
-///////REQUIRE DATABASE & .ENV///////////
+/////////////////REQUIRE DATABASE & .ENV//////////////////
 require("dotenv").config();
 require("./mongo");
-////////////////////////////////////////
 
 const express = require("express");
+
+//////////////////SENTRY IMPORT///////////////////////////
+const Sentry = require("@sentry/node");
+const Tracing = require("@sentry/tracing");
+
 const app = express();
 
-/////////MIDDLEWARES IMPORT//////////////
+/////////////////////SENTRY INIT//////////////////////////
+Sentry.init({
+    dsn: "https://ff36b7c6dc5f4d7bbb7cb9a91dd7df0f@o1083032.ingest.sentry.io/6092209",
+    integrations: [
+        // enable HTTP calls tracing
+        new Sentry.Integrations.Http({ tracing: true }),
+        // enable Express.js middleware tracing
+        new Tracing.Integrations.Express({ app }),
+    ],
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for performance monitoring.
+    // We recommend adjusting this value in production
+    tracesSampleRate: 1.0,
+});
+
+app.use(Sentry.Handlers.requestHandler());
+app.use(Sentry.Handlers.tracingHandler());
+
+//////////////////MIDDLEWARE ERRORS IMPORT///////////////////////
 const notFound = require("./middleware/notFound");
 const handleError = require("./middleware/handleError");
-////////////////////////////////////////
 
-/////////////CORS IMPORT////////////////
+//////////////////////CORS IMPORT//////////////////////////
 /* app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
@@ -31,19 +53,21 @@ app.use(cors());
 const Note = require("./models/Note");
 const { exists } = require("./models/Note");
 
+const Contact = require("./models/Contact");
+
 app.use(express.json());
 
 /*const app = http.createServer((request, response) => {
     response.writeHead(200, {'Content-Type':'application/json'});
     response.end(JSON.stringify(notes));
 })*/
-////////////////////////////////////////
 
-/////////////////CRUD//////////////////
+/////////////////END-POINTS CONTROLLERS//////////////////
 app.get("/", (request, response) => {
     response.send(`<h1>Hello World</h1>`);
 });
 
+/////////////////NOTES-END-POINTS CONTROLLERS//////////////////
 app.get("/api/notes", (request, response) => {
     Note.find({}).then((notes) => {
         response.json(
@@ -121,13 +145,90 @@ app.post("/api/notes", (request, response) => {
         response.json(savedNote);
     });
 });
-////////////////////////////////////////
 
-//////////MIDDLEWARES//////////////////
+/////////////////CONTACTS-END-POINTS CONTROLLERS//////////////////
+app.get("/api/contacts", (request, response) => {
+    Contact.find({}).then((contacts) => {
+        response.json(
+            contacts.map((contact) => {
+                const { _id, __V, ...restOfContact } = contact.toObject();
+                return {
+                    id: _id,
+                    ...restOfContact,
+                };
+            })
+        );
+    });
+});
+
+app.post("/api/contacts", (request, response) => {
+    const contact = request.body;
+    console.log(request.body);
+    console.log(contact);
+    if (!contact || !contact.number || !contact.name) {
+        return response.status(400).json({
+            contact: contact.body,
+            error: "Content is missing or does not exist.",
+        });
+    }
+
+    const newContact = new Contact({
+        name: contact.name,
+        number: contact.number,
+    });
+
+    newContact.save().then((savedContact) => {
+        response.json(savedContact);
+    });
+});
+
+app.get("/api/contacts/:id", (request, response, next) => {
+    const { id } = request.params;
+    Contact.findById(id)
+        .then((contact) => {
+            if (contact) {
+                response.json(contact);
+            } else {
+                response.status(404).end();
+            }
+        })
+        .catch((err) => next(err));
+});
+
+app.put("/api/contacts/:id", (request, response) => {
+    const { id } = request.params;
+    const contact = request.body;
+
+    const newContactInfo = {
+        name: contact.name,
+        number: contact.number,
+    };
+
+    Contact.findByIdAndUpdate(id, newContactInfo, { new: true })
+        .then((result) => {
+            response.json(result);
+        })
+        .catch((err) => {
+            next(err);
+        });
+});
+
+app.delete("/api/contacts/:id", (request, response, next) => {
+    const { id } = request.params;
+    Contact.findByIdAndDelete(id)
+        .then(() => {
+            response.status(204);
+        })
+        .catch((err) => next(error));
+});
+
+/////////////////SENTRY ERROR HANDLERS////////////////////////
+app.use(Sentry.Handlers.errorHandler());
+
+//////////////////MIDDLEWARES/////////////////////////////
 app.use(notFound);
 app.use(handleError);
-//////////////////////////////////////
 
-//////////SERVER CONNECTION///////////
+//////////////////SERVER CONNECTION///////////////////////
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server is running on port: ${PORT}`));
