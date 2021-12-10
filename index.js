@@ -65,12 +65,12 @@ app.use(express.json());
 })*/
 
 /////////////////END-POINTS CONTROLLERS//////////////////
-app.get("/", cors(), (request, response) => {
+app.get("/", (request, response) => {
     response.send(`<h1>Hello World</h1>`);
 });
 
 /////////////////NOTES-END-POINTS CONTROLLERS//////////////////
-app.get("/api/notes", cors(), (request, response) => {
+app.get("/api/notes", (request, response) => {
     Note.find({}).then((notes) => {
         response.json(
             notes.map((note) => {
@@ -84,7 +84,7 @@ app.get("/api/notes", cors(), (request, response) => {
     });
 });
 
-app.get("/api/notes/:id", cors(), (request, response, next) => {
+app.get("/api/notes/:id", (request, response, next) => {
     const { id } = request.params;
     Note.findById(id)
         .then((note) => {
@@ -97,7 +97,7 @@ app.get("/api/notes/:id", cors(), (request, response, next) => {
         .catch((err) => next(err));
 });
 
-app.put("/api/notes/:id", cors(), (request, response, next) => {
+app.put("/api/notes/:id", (request, response, next) => {
     const { id } = request.params;
     const note = request.body;
 
@@ -116,7 +116,7 @@ app.put("/api/notes/:id", cors(), (request, response, next) => {
         });
 });
 
-app.delete("/api/notes/:id", cors(), (request, response, next) => {
+app.delete("/api/notes/:id", (request, response, next) => {
     const { id } = request.params;
     Note.findByIdAndDelete(id)
         .then(() => {
@@ -126,7 +126,7 @@ app.delete("/api/notes/:id", cors(), (request, response, next) => {
         .catch((err) => next(error));
 });
 
-app.post("/api/notes", cors(), (request, response) => {
+app.post("/api/notes", (request, response) => {
     const note = request.body;
 
     if (!note || !note.body) {
@@ -148,8 +148,9 @@ app.post("/api/notes", cors(), (request, response) => {
     });
 });
 
+
 /////////////////CONTACTS-END-POINTS CONTROLLERS//////////////////
-app.get("/api/contacts", cors(), (request, response) => {
+app.get("/api/contacts", (request, response) => {
     Contact.find({}).then((contacts) => {
         response.json(
             contacts.map((contact) => {
@@ -163,7 +164,7 @@ app.get("/api/contacts", cors(), (request, response) => {
     });
 });
 
-app.post("/api/contacts", cors(), (request, response) => {
+app.post("/api/contacts", (request, response) => {
     const contact = request.body;
     console.log(request.body);
     console.log(contact);
@@ -184,7 +185,7 @@ app.post("/api/contacts", cors(), (request, response) => {
     });
 });
 
-app.get("/api/contacts/:id", cors(), (request, response, next) => {
+app.get("/api/contacts/:id", (request, response, next) => {
     const { id } = request.params;
     Contact.findById(id)
         .then((contact) => {
@@ -197,7 +198,7 @@ app.get("/api/contacts/:id", cors(), (request, response, next) => {
         .catch((err) => next(err));
 });
 
-app.put("/api/contacts/:id", cors(), (request, response) => {
+app.put("/api/contacts/:id", (request, response) => {
     const { id } = request.params;
     const contact = request.body;
 
@@ -215,7 +216,7 @@ app.put("/api/contacts/:id", cors(), (request, response) => {
         });
 });
 
-app.delete("/api/contacts/:id", cors(), (request, response, next) => {
+app.delete("/api/contacts/:id", (request, response, next) => {
     const { id } = request.params;
     Contact.findByIdAndDelete(id)
         .then(() => {

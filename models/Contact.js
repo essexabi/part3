@@ -5,7 +5,7 @@ const { Schema, model, deleteModel } = require("mongoose");
 
 const contactSchema = new Schema({
     name: String,
-    number: Number
+    number: String
    
 })
 
